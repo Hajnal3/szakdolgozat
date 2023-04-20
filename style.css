@@ -1,0 +1,57 @@
+.columnleft{
+    float: left;
+    width: 50%;
+}
+body {
+
+	background: rgb(0, 0, 0);
+	font-family: 'Segoe Ui';
+	margin: 0;
+	padding: 0;
+}
+h1{
+    color: rgb(0, 167, 228);
+    text-align: center;
+}
+h2{
+    color: rgb(1, 102, 177);
+    text-align: left;
+}
+p{
+    color: aliceblue;
+    font-size: 20;
+    font-style:bold;
+}
+.header{
+    height=540px;
+}
+.table{
+    color: rgb(1, 102, 177);
+    position: absolute;
+    left: 520px;
+    bottom: 200px;
+    font-size: 20px;
+    /*width:960px;*/
+    
+}
+.prod{
+    width:940px;
+    position: absolute;
+    left: 5px;
+    bottom: 5px;
+    height: 50%;
+    
+}
+
+/*.container {
+    width:50%;
+    height: 50%;
+    background-color: RGB(0, 167, 228);
+	position: relative;
+	float: left;
+}
+div{
+    height: 400px;
+    width: 100%;
+  }
+*/
