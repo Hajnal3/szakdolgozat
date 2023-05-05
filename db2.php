@@ -1,7 +1,10 @@
 <?php
 try {
-$conn = new PDO("sqlsrv:Database=Applications;server=HISZWSDB08", "MD_USER", "paassss") or die;
+$conn = new PDO('mysql:host=localhost;dbname=szakdolgozat', "test", " yourpassword") or die;
+       
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    
 
     $mydate=date('Y-m-d H:i:s');
     $myday=date('Y-m-d');
@@ -10,22 +13,21 @@ $conn = new PDO("sqlsrv:Database=Applications;server=HISZWSDB08", "MD_USER", "pa
         case ( $hour >= 6 && $hour < 14 ):$shift=6; break;
         case ( $hour >=14 && $hour < 22 ):$shift=14; break;
     default: $shift=22; break;
+            
 }
-
+$myday=date("2023-04-20"); //tesztelés miatta fix változó
 //választott cella cellid-a    
-$selectOption = $_POST['cell']; 
+$selectOption = $_POST['machine']; 
 if (!isset($selectOption)){
-    $selectOption=17;
+    $selectOption=101;
 }
     
     //GEF Leszürve costcenterre RondoHC-kolcsonadott_minutes+kolcsonvett_minutes/letszam     //Planned prod - shift, mydate 
 //Get attendance
     $myquerry="SELECT COUNT(name) AS letszam FROM attendance_presents 
-    WHERE area like 'BMW'
-    AND plant like  'Székesfehérvár Elektronika'
-    AND cshift like '".$shift."' 
-    AND '".$mydate."' BETWEEN startdate AND enddate" ;
-    //echo $myquerry;
+    WHERE station_id like '".$selectOption."'
+    AND shift_id like '".$shift."'";
+
     $present=$conn->query($myquerry);
     $result = $present->fetchAll(PDO::FETCH_NUM);
     $letszam = $result[0][0];
@@ -44,58 +46,58 @@ $processNames=array(
 );    
     
 //Get AFT
-    $mySql=("IF (DATEPART(HOUR,GETDATE()) >= 6)
-BEGIN
-SELECT X.processid, SUM(X.passed) As passed, SUM(X.failed) as failed 
-    FROM (	
-	SELECT CONVERT(date,CONVERT(date,(DATEADD(DAY,0,GETDATE())))) as ddate, MAIN.snr, MAIN.processid, MAIN.cellid, SUM(MAIN.passed) as passed, SUM(MAIN.failed) as failed 
+    $mySql=("IF (EXTRACT(HOUR from now()) >= 6) 
+    BEGIN
+    SELECT X.process_id, SUM(X.passed) As passed, SUM(X.failed) as failed
     FROM (
-	SELECT f.snr, f.processid, f.cellid, SUM(-1*f.passed) As passed, SUM(-1*f.failed) As failed 
-    FROM [Applications_DB05].[dbo].[fm_datas] AS f 
-    WHERE (DATEPART(HOUR, f.ddate) = ".$shift."-1) 
-    and CONVERT(date, f.ddate) = CONVERT(date, CONVERT(date,(DATEADD(DAY,0,GETDATE())))) 
-    and f.snr != 0 GROUP BY f.processid, f.snr, f.cellid    
+	SELECT CONVERT(CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date),date) as ddate, MAIN.snr, MAIN.process_id, MAIN.station_id, SUM(MAIN.passed) as passed, SUM(MAIN.failed) as failed
+    FROM (
+	SELECT f.snr, f.process_id, f.station_id, SUM(-1*f.passed) As passed, SUM(-1*f.failed) As failed 
+    FROM process AS f 
+    WHERE (EXTRACT(HOUR from f.ddate) = ".$shift."-1) 
+    and CONVERT(f.ddate,date) = CONVERT( CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date),date) 
+    and f.snr != 0 GROUP BY f.process_id, f.snr, f.station_id    
     UNION   
-    SELECT f.snr, f.processid, f.cellid, SUM(f.passed) As passed, SUM(f.failed) As failed 
-    FROM [Applications_DB05].[dbo].[fm_datas] AS f 
-    WHERE (DATEPART(HOUR, f.ddate) = DATEPART(HOUR,GETDATE())) and CONVERT(date, f.ddate) = CONVERT(date, CONVERT(date,(DATEADD(DAY,0,GETDATE())))) and f.snr != 0 
-    GROUP BY f.processid, f.snr, f.cellid
+    SELECT f.snr, f.process_id, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
+    FROM process AS f 
+    WHERE (EXTRACT(HOUR from f.ddate) = EXTRACT(HOUR from NOW())) and CONVERT(f.ddate,date) = CONVERT( CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date),date) and f.snr != 0 
+    GROUP BY f.process_id, f.snr, f.station_id
 	) AS MAIN 
-    INNER JOIN [Applications_DB05].[dbo].[fm_cells] AS C ON C.cellid = MAIN.cellid 
-    WHERE C.assy_cellid = ".$selectOption." 
-	GROUP BY MAIN.snr, MAIN.processid, MAIN.cellid	
+    INNER JOIN stations AS C ON C.cellid = MAIN.cellid 
+    WHERE C.station_id = ".$selectOption." 
+	GROUP BY MAIN.snr, MAIN.process_id, MAIN.station_id	
 	) AS X
-    GROUP BY X.processid
+    GROUP BY X.process_id
 END
 ELSE
 BEGIN
-SELECT X.processid, SUM(X.passed) As passed, SUM(X.failed) as failed 
+SELECT X.process_id, SUM(X.passed) As passed, SUM(X.failed) as failed 
     FROM (	
-	SELECT CONVERT(date,CONVERT(date,(DATEADD(DAY,-1,GETDATE())))) as ddate, MAIN.snr, MAIN.processid, MAIN.cellid, SUM(MAIN.passed) as passed, SUM(MAIN.failed) as failed 
+	SELECT CONVERT(CONVERT(DATE_ADD(NOW(), INTERVAL 1 day),date),date) as ddate, MAIN.snr, MAIN.process_id, MAIN.station_id, SUM(MAIN.passed) as passed, SUM(MAIN.failed) as failed 
     FROM (
 	--ELŐZŐ NAP 21:59-ig
-	SELECT f.snr, f.processid, f.cellid, SUM(-1*f.passed) As passed, SUM(-1*f.failed) As failed 
-    FROM [Applications_DB05].[dbo].[fm_datas] AS f 
-    WHERE (DATEPART(HOUR, f.ddate) = 21) and CONVERT(date, f.ddate) = CONVERT(date, CONVERT(date,(DATEADD(DAY,-1,GETDATE())))) and f.snr != 0 
-	GROUP BY f.processid, f.snr, f.cellid     
+	SELECT f.snr, f.process_id, f.station_id, SUM(-1*f.passed) As passed, SUM(-1*f.failed) As failed 
+    FROM process AS f 
+    WHERE (EXTRACT(HOUR from f.ddate) = 21) and CONVERT(f.ddate,date) = CONVERT(CONVERT(DATE_ADD(NOW(), INTERVAL 1 day),date),date) and f.snr != 0 
+	GROUP BY f.process_id, f.snr, f.station_id     
     UNION   
 	-- ELŐZŐ NAP 23:59-ig
-    SELECT f.snr, f.processid, f.cellid, SUM(f.passed) As passed, SUM(f.failed) As failed 
-    FROM [Applications_DB05].[dbo].[fm_datas] AS f 
-    WHERE (DATEPART(HOUR, f.ddate) = 23) and CONVERT(date, f.ddate) = CONVERT(date, CONVERT(date,(DATEADD(DAY,-1,GETDATE())))) and f.snr != 0 
-    GROUP BY f.processid, f.snr, f.cellid	
+    SELECT f.snr, f.processid, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
+    FROM process AS f 
+    WHERE (EXTRACT(HOUR from f.ddate) and CONVERT(f.ddate,date) = CONVERT(CONVERT(DATE_ADD(NOW(), INTERVAL 1 day),date),date) and f.snr != 0 
+    GROUP BY f.process_id, f.snr, f.station_id	
 	UNION
 	--AKTUÁLIS NAP AKTUÁLIS ÓRÁIG
-	SELECT f.snr, f.processid, f.cellid, SUM(f.passed) As passed, SUM(f.failed) As failed 
-    FROM [Applications_DB05].[dbo].[fm_datas] AS f 
-    WHERE (DATEPART(HOUR, f.ddate) = DATEPART(HOUR,GETDATE())) and CONVERT(date, f.ddate) = CONVERT(date, CONVERT(date,(DATEADD(DAY,0,GETDATE())))) and f.snr != 0 
-    GROUP BY f.processid, f.snr, f.cellid	
+	SELECT f.snr, f.process_id, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
+    FROM process AS f 
+    WHERE (EXTRACT(HOUR from f.ddate) = EXTRACT(HOUR from NOW())) and CONVERT(f.ddate,date) = CONVERT(CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date),date) and f.snr != 0 
+    GROUP BY f.process_id, f.snr, f.station_id	
 	) AS MAIN 
-    INNER JOIN [Applications_DB05].[dbo].[fm_cells] AS C ON C.cellid = MAIN.cellid 
-    WHERE C.assy_cellid = ".$selectOption." 
-	GROUP BY MAIN.snr, MAIN.processid, MAIN.cellid	
+    INNER JOIN stations AS C ON C.cellid = MAIN.cellid 
+    WHERE C.station_id = ".$selectOption." 
+	GROUP BY MAIN.snr, MAIN.process_id, MAIN.station_id	
 	) AS X
-    GROUP BY X.processid
+    GROUP BY X.process_id 
 END");
     
     //[procdessid, passod, failed] => [processid =>[PASS: db, failed: db]]    

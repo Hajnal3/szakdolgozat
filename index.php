@@ -15,24 +15,23 @@
     
 
       
-<title>BMW</title>  
+<title>Dashboard</title>  
     
 </head>
 <body>
 <?php
     include('db2.php');
+    
+    echo $mySql;
+    echo $selectOption;
+    
 ?>
     
-<!--
-    <h2>Aktuális létszám: <?php echo json_encode($letszam)?></h2>
-    <h3>Mostani műszak teszt arányai:</h3>
-    <canvas title="test" id="test" height="50%" ></canvas> 
--->   
+ 
 <div class="header">
-    <form action="" method="Get">
-        <select name="cell">
-        <option value=0>-----</option>
-        <option value=17>BOOSTER_18</option>
+    <form action="db2.php" method="POST">
+        <select name="machine">
+        <option value=101>Assembly Station 1</option>
         <option value=58>BOOSTER_21</option>
         <option value=15>MGU_18</option>
         <option value=111>MGU_21</option>

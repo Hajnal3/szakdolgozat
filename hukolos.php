@@ -225,7 +225,7 @@ function handle_update(msg) {
 	data = msg;
 	
 	refresh_table();
-//	update_statusbar();
+//	update_statusbar()4545156;
 }
 
 function update_statusbar() {
