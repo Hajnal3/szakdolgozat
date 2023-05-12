@@ -1,4 +1,19 @@
 <?php
+function checkTimer() {
+  $startTime = time();
+  $interval = 200000; // 20 seconds interval
+  $currentTime = time();
+  $diff = $currentTime - $startTime;
+  if ($diff >= $interval) {
+    // Reset the timer
+    $startTime = time();
+    return true;
+  } else {
+    return false;
+  }
+}
+
+
 try {
 $conn = new PDO('mysql:host=localhost;dbname=szakdolgozat', "test", " yourpassword") or die;
        
@@ -7,7 +22,7 @@ $conn = new PDO('mysql:host=localhost;dbname=szakdolgozat', "test", " yourpasswo
     
 
     $mydate=date('Y-m-d H:i:s');
-    $myday=date('Y-m-d');
+    //$myday=date('Y-m-d');
     $hour = date('H');
     switch( true ){
         case ( $hour >= 6 && $hour < 14 ):$shift=6; break;
@@ -16,26 +31,63 @@ $conn = new PDO('mysql:host=localhost;dbname=szakdolgozat', "test", " yourpasswo
             
 }
 $myday=date("2023-04-20"); //tesztelés miatta fix változó
-//választott cella cellid-a    
-$selectOption = $_POST['machine']; 
+
+    
+    //választott cella cellid-a 
+if(isset($_POST['machine'])){
+        $selectOption = $_POST['machine'];
+    }
 if (!isset($selectOption)){
     $selectOption=101;
 }
     
-    //GEF Leszürve costcenterre RondoHC-kolcsonadott_minutes+kolcsonvett_minutes/letszam     //Planned prod - shift, mydate 
-//Get attendance
-    $myquerry="SELECT COUNT(name) AS letszam FROM attendance_presents 
+//form options    
+ $myformquerry="SELECT station_id, station_name FROM stations";
+    $stations=$conn->query($myformquerry);
+    $result = $stations->fetchAll(PDO::FETCH_NUM);
+    $stationData = array();
+    foreach($result as $row)
+    {
+        $stationid=$row[0];
+        $stname=$row[1];
+        $stationData[]=array("value" => $stationid,"name" => $stname);
+    }
+    
+    
+//$letszam
+$myquerry="SELECT COUNT(name) AS letszam FROM attendance_presents 
     WHERE station_id like '".$selectOption."'
     AND shift_id like '".$shift."'";
 
     $present=$conn->query($myquerry);
     $result = $present->fetchAll(PDO::FETCH_NUM);
     $letszam = $result[0][0];
-    //$letszam;
-
     
+//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+/*$myproquerry="SELECT process_id, process_name FROM processes GROUP BY process_name";
+    $pro=$conn->query($myproquerry);
+    $result = $pro->fetchAll(PDO::FETCH_NUM);
+    $processNames = array();
+    foreach($result as $row)
+    {
+        $processid=$row[0];
+        $prname=$row[1];
+        $processNames[]=array("name" => $stname, "value" => $processid);
+    }
+    */
     
-$processNames=array(
+    $myproquerry="SELECT process_name, GROUP_CONCAT(process_id SEPARATOR ',') as process_ids FROM processes GROUP BY process_name";
+$pro=$conn->query($myproquerry);
+$result = $pro->fetchAll(PDO::FETCH_ASSOC);
+$processNames = array();
+foreach($result as $row)
+{
+    $prname=$row['process_name'];
+    $processids=explode(',', $row['process_ids']);
+    $processids=array_map('intval', $processids);
+    $processNames[$prname]=$processids;
+}
+$processNamessssssssss=array(
     "FKT"=>array(10073,10079),
     "FLASH"=>array(10066,10180),
     "ASSEMLY"=>array(10051,10058,10199,10200,10112,10119),
@@ -45,66 +97,66 @@ $processNames=array(
     "HU"=>array(10010)
 );    
     
-//Get AFT
-    $mySql=("IF (EXTRACT(HOUR from now()) >= 6) 
-    BEGIN
-    SELECT X.process_id, SUM(X.passed) As passed, SUM(X.failed) as failed
-    FROM (
-	SELECT CONVERT(CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date),date) as ddate, MAIN.snr, MAIN.process_id, MAIN.station_id, SUM(MAIN.passed) as passed, SUM(MAIN.failed) as failed
-    FROM (
-	SELECT f.snr, f.process_id, f.station_id, SUM(-1*f.passed) As passed, SUM(-1*f.failed) As failed 
-    FROM process AS f 
-    WHERE (EXTRACT(HOUR from f.ddate) = ".$shift."-1) 
-    and CONVERT(f.ddate,date) = CONVERT( CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date),date) 
-    and f.snr != 0 GROUP BY f.process_id, f.snr, f.station_id    
-    UNION   
-    SELECT f.snr, f.process_id, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
-    FROM process AS f 
-    WHERE (EXTRACT(HOUR from f.ddate) = EXTRACT(HOUR from NOW())) and CONVERT(f.ddate,date) = CONVERT( CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date),date) and f.snr != 0 
-    GROUP BY f.process_id, f.snr, f.station_id
-	) AS MAIN 
-    INNER JOIN stations AS C ON C.cellid = MAIN.cellid 
-    WHERE C.station_id = ".$selectOption." 
-	GROUP BY MAIN.snr, MAIN.process_id, MAIN.station_id	
-	) AS X
-    GROUP BY X.process_id
-END
-ELSE
-BEGIN
-SELECT X.process_id, SUM(X.passed) As passed, SUM(X.failed) as failed 
-    FROM (	
-	SELECT CONVERT(CONVERT(DATE_ADD(NOW(), INTERVAL 1 day),date),date) as ddate, MAIN.snr, MAIN.process_id, MAIN.station_id, SUM(MAIN.passed) as passed, SUM(MAIN.failed) as failed 
-    FROM (
-	--ELŐZŐ NAP 21:59-ig
-	SELECT f.snr, f.process_id, f.station_id, SUM(-1*f.passed) As passed, SUM(-1*f.failed) As failed 
-    FROM process AS f 
-    WHERE (EXTRACT(HOUR from f.ddate) = 21) and CONVERT(f.ddate,date) = CONVERT(CONVERT(DATE_ADD(NOW(), INTERVAL 1 day),date),date) and f.snr != 0 
-	GROUP BY f.process_id, f.snr, f.station_id     
-    UNION   
-	-- ELŐZŐ NAP 23:59-ig
-    SELECT f.snr, f.processid, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
-    FROM process AS f 
-    WHERE (EXTRACT(HOUR from f.ddate) and CONVERT(f.ddate,date) = CONVERT(CONVERT(DATE_ADD(NOW(), INTERVAL 1 day),date),date) and f.snr != 0 
-    GROUP BY f.process_id, f.snr, f.station_id	
-	UNION
-	--AKTUÁLIS NAP AKTUÁLIS ÓRÁIG
-	SELECT f.snr, f.process_id, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
-    FROM process AS f 
-    WHERE (EXTRACT(HOUR from f.ddate) = EXTRACT(HOUR from NOW())) and CONVERT(f.ddate,date) = CONVERT(CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date),date) and f.snr != 0 
-    GROUP BY f.process_id, f.snr, f.station_id	
-	) AS MAIN 
-    INNER JOIN stations AS C ON C.cellid = MAIN.cellid 
-    WHERE C.station_id = ".$selectOption." 
-	GROUP BY MAIN.snr, MAIN.process_id, MAIN.station_id	
-	) AS X
-    GROUP BY X.process_id 
-END");
+//Get yield
+    $mySqlDay=("SELECT X.process_id, SUM(X.passed) As passed, SUM(X.failed) as failed
+                FROM (SELECT CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date) as process_date, MAIN.snr, MAIN.process_id, MAIN.station_id, SUM(MAIN.passed) as passed, SUM(MAIN.failed) as failed
+                    FROM (
+                        SELECT f.snr, f.process_id, f.station_id, SUM(-1*f.passed) As passed, SUM(-1*f.failed) As failed 
+                        FROM process AS f 
+                        WHERE (EXTRACT(HOUR from f.process_date) = ".$shift."-1) 
+                        and CONVERT(f.process_date,date) = CONVERT( CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date),date) 
+                        and f.snr != 0 GROUP BY f.process_id, f.snr, f.station_id    
+                        UNION   
+                        SELECT f.snr, f.process_id, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
+                        FROM process AS f 
+                        WHERE (EXTRACT(HOUR from f.process_date) = EXTRACT(HOUR from NOW())) and CONVERT(f.process_date,date) = CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date) and f.snr != 0 
+                        GROUP BY f.process_id, f.snr, f.station_id
+                    ) AS MAIN 
+                    INNER JOIN stations AS C ON C.station_id = MAIN.station_id 
+                    WHERE C.station_id = ".$selectOption."
+                    GROUP BY MAIN.snr, MAIN.process_id, MAIN.station_id    
+                ) AS X
+                GROUP BY X.process_id");
     
-    //[procdessid, passod, failed] => [processid =>[PASS: db, failed: db]]    
+    $mySqlNight=("SELECT X.process_id, SUM(X.passed) As passed, SUM(X.failed) as failed 
+				FROM (    
+                SELECT CONVERT(DATE_ADD(NOW(), INTERVAL 1 day),date) as process_date, MAIN.snr, MAIN.process_id, MAIN.station_id, SUM(MAIN.passed) as passed, SUM(MAIN.failed) as failed 
+                FROM (
+                    SELECT f.snr, f.process_id, f.station_id, SUM(-1*f.passed) As passed, SUM(-1*f.failed) As failed 
+                    FROM process AS f 
+                    WHERE (EXTRACT(HOUR from f.process_date) = 21) and CONVERT(f.process_date,date) = CONVERT(DATE_ADD(NOW(), INTERVAL 1 day),date) and f.snr != 0 
+                    GROUP BY f.process_id, f.snr, f.station_id 
+                UNION   
+                    SELECT f.snr, f.process_id, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
+                    FROM process AS f 
+                    WHERE (EXTRACT(HOUR from f.process_date) and CONVERT(f.process_date,date) = CONVERT(DATE_ADD(NOW(), INTERVAL 1 day),date)) and f.snr != 0 
+                    GROUP BY f.process_id, f.snr, f.station_id 
+                UNION
+                    SELECT f.snr, f.process_id, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
+					FROM process AS f 
+					WHERE (EXTRACT(HOUR from f.process_date) = EXTRACT(HOUR from NOW())) and CONVERT(f.process_date,date) = CONVERT(DATE_ADD(NOW(), INTERVAL 0 day),date) and f.snr != 0 
+					GROUP BY f.process_id, f.snr, f.station_id
+                    ) AS MAIN 
+                    INNER JOIN stations AS C ON C.station_id = MAIN.station_id 
+                    WHERE C.station_id = ".$selectOption."
+                    GROUP BY MAIN.snr, MAIN.process_id, MAIN.station_id
+					) AS X
+                GROUP BY X.process_id");
     
-    $handleAft = $conn->query($mySql);
-    $result = $handleAft->fetchAll(PDO::FETCH_NUM);
-        
+    //[procdessid, passed, failed] => [processid =>[PASS: db, failed: db]]    
+    
+    /*if ( date('H') > 6){
+        $handleY = $conn->query($mySqlDay);
+        $result = $handleY->fetchAll(PDO::FETCH_NUM);
+    } 
+    else {
+        $handleY = $conn->query($mySqlNight);
+        $result = $handleY->fetchAll(PDO::FETCH_NUM);
+    }*/
+    
+    $handleY = $conn->query($mySqlNight);
+    $result = $handleY->fetchAll(PDO::FETCH_NUM);
+    
     $processDb=array();
     foreach($result as $row)
     {
@@ -114,7 +166,6 @@ END");
         
         $processDb[$processid]=array("pass" => $pass,"fail" => $fail);
     }
-    
     
     $processAll=array();
     foreach($processNames as $name => $processIds) {
@@ -135,11 +186,10 @@ END");
     //$pricessDbf[123][0] => 1234db;
     
 
-$handleProdPlan = $conn->query("SELECT goodqty, plannedqty FROM Qlik_produced_planned 
-    WHERE area like 'BMW' 
-    AND plant like 'Székesfehérvár Elektronika' 
-    AND cshift like '".$shift."'
-    AND cdate BETWEEN '".date('Y-m-d')." 00:00:00.000' AND '".date('Y-m-d')." 23:59:00.000'");
+$handleProdPlan = $conn->query("SELECT quantity FROM prodplan 
+    WHERE station_id = ".$selectOption."  
+    AND shift_id = ".$shift."
+    AND deadline = ".$myday."");
     $result = $handleProdPlan->fetchAll(PDO::FETCH_NUM);
         
     $prod_sum=0;

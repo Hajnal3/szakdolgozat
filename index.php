@@ -3,8 +3,8 @@
 <head>
     <link rel="stylesheet" href="style.css">
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--<meta http-equiv="X-UA-Compatible" content="IE=Edge"-->
+    <!--meta name="viewport" content="width=device-width, initial-scale=1"-->
     <script src="Chart.bundle.js"></script>
     <!--<script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.0/dist/chart.min.js"></script>-->
     <script src="chartjs-plugin-datalabels.js"></script>
@@ -13,23 +13,20 @@
     header("refresh: 300;");
 ?>
     
-
-      
 <title>Dashboard</title>  
     
 </head>
 <body>
 <?php
     include('db2.php');
-    
-    echo $mySql;
-    echo $selectOption;
-    
 ?>
+    
+    
+
     
  
 <div class="header">
-    <form action="db2.php" method="POST">
+    <form action="" method="POST">
         <select name="machine">
         <option value=101>Assembly Station 1</option>
         <option value=58>BOOSTER_21</option>
@@ -41,57 +38,28 @@
         </select> 
         <input type="submit" name="Választ" alt="Kiválaszt">
     </form>
-        
+</div>
 <h2>Aktuális létszám: <?php echo json_encode($letszam)?></h2>
     
-<h3>Adott műszak tesztberendezések arányai:</h3>
-
-<canvas title="test" id="test" height="50%"></canvas> 
-
-
-</div>
     
 <div class="grid-container">
-    
-    <!--<canvas title="prod" id="prod" height="50%"></canvas>-->
-    
-    <div class="grid-item">
+	<div class="grid-item item1">
+        <h3> Adott műszak tesztberendezések arányai:</h3> 
+	</div>
+    <div class="grid-item item2">
+		<canvas title="test" id="test" ></canvas> 
+	</div>
+	<div class="grid-item item3">
         <h3>Mai Tervezett és Gyártott darabszám:</h3>
-        <canvas title="prod" id="prod" height="50%"></canvas>
-    </div>
-    
-    <div class="grid-item">
-        <table>
-            <tr>
-                <th>Cikkszám</th>
-                <th>Típus</th>
-                <th>Terv</th>
-                <th>Tény</th>
-            </tr>
-            <tr>
-                <!--https://stackoverflow.com/questions/11943479/create-html-table-from-sql-table-->
-                <td>1111111</td>
-                <td>próba</td>
-                <td>45</td>
-                <td>63</td>
-            </tr>
-            <tr>
-                <!--https://stackoverflow.com/questions/11943479/create-html-table-from-sql-table-->
-                <td>1111111</td>
-                <td>próba</td>
-                <td>45</td>
-                <td>63</td>
-            </tr>
-            <tr>
-                <!--https://stackoverflow.com/questions/11943479/create-html-table-from-sql-table-->
-                <td>1111111</td>
-                <td>próba</td>
-                <td>45</td>
-                <td>63</td>
-            </tr>
-        </table>
-    </div>
+	</div> 
+    <div class="grid-item item4">
+		<canvas title="prod" id="prod"></canvas> 
+	</div>
+    <div class="grid-item item5">
+	<img src="due.png" class="grid-image">
+    </div> 
 </div>
+    
     
 <script>
     //Object.keys(data).map(function(d) { return data[d]["sumpass"]; });
@@ -224,6 +192,8 @@
     },
     });
 </script>
+
+    
     
 </body>
 </html>
