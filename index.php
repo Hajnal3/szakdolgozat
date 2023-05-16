@@ -6,66 +6,100 @@
     <!--<meta http-equiv="X-UA-Compatible" content="IE=Edge"-->
     <!--meta name="viewport" content="width=device-width, initial-scale=1"-->
     <script src="Chart.bundle.js"></script>
+    
     <!--<script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.0/dist/chart.min.js"></script>-->
     <script src="chartjs-plugin-datalabels.js"></script>
     
 <?php
-    header("refresh: 300;");
+    include('db2.php');
+    include_once('Library.php');
+
+    $attendance=getAttendance($present);
+    $production_state=getProdData($prod_data);
+    $AllYield = getAllYield($production_state,$handleY);
+    $formStation = getMachineList($stations);
+     var_dump($stations);
+   
 ?>
     
 <title>Dashboard</title>  
     
+    
 </head>
 <body>
-<?php
-    include('db2.php');
-?>
-    
-    
-
-    
- 
+   
 <div class="header">
     <form action="" method="POST">
         <select name="machine">
-        <option value=101>Assembly Station 1</option>
-        <option value=58>BOOSTER_21</option>
-        <option value=15>MGU_18</option>
-        <option value=111>MGU_21</option>
-        <option value=112>MGU_22</option>
-        <option value=14>RAM</option>
-        <option value=57>WAVE</option>
+            <?php foreach ($formStation as $station): ?>
+                <option value="<?php echo $station['value']; ?>">
+                <?php echo $station['name']; ?></option>
+            <?php endforeach; ?>
         </select> 
         <input type="submit" name="Választ" alt="Kiválaszt">
     </form>
-</div>
-<h2>Aktuális létszám: <?php echo json_encode($letszam)?></h2>
+</div>    
+    
+<h2>Aktuális létszám: <?php echo json_encode($attendance)?></h2>
+    
+    <div class='grid-item item2'>
+		<canvas title='test' id='test' ></canvas> 
+	</div> 
     
     
-<div class="grid-container">
-	<div class="grid-item item1">
+    
+<?php  
+    session_start();
+if (!isset($_SESSION['flip'])) {
+    $_SESSION['flip'] = false;
+}
+
+if ($_SESSION['flip']) {
+    echo "
+<div class='grid-container'>
+	<div class='grid-item item1'>
         <h3> Adott műszak tesztberendezések arányai:</h3> 
 	</div>
-    <div class="grid-item item2">
-		<canvas title="test" id="test" ></canvas> 
-	</div>
-	<div class="grid-item item3">
+    <div class='grid-item item2'>
+		<canvas title='test' id='test' ></canvas> 
+	</div> 
+</div>";
+    
+    $_SESSION['flip'] = false;
+} else {
+    echo "
+<div c<div class='grid-container'>
+	<div class='grid-item item3'>
         <h3>Mai Tervezett és Gyártott darabszám:</h3>
 	</div> 
-    <div class="grid-item item4">
-		<canvas title="prod" id="prod"></canvas> 
+    <div class='grid-item item4'>
+		<canvas title='prod' id='prod'></canvas> 
 	</div>
-    <div class="grid-item item5">
-	<img src="due.png" class="grid-image">
+    <div class='grid-item item5'>
+	   <img src='due.png' class='grid-image'>
     </div> 
-</div>
+</div>";
+    $_SESSION['flip'] = true;
+}
+        
+?>
+
+
+<!--script>
+  setTimeout(function() {
+    window.location.reload();
+  }, 5000);
+    
+</script-->
+ 
+
     
     
 <script>
     //Object.keys(data).map(function(d) { return data[d]["sumpass"]; });
     //Chart.plugins.register(ChartDataLabels);
     var ctx = document.getElementById("test").getContext("2d");
-    var data = <?=json_encode($processAll)?>;
+    var data = <?=json_encode($AllYield)?>;
     var pass = Object.keys(data).map(d => data[d]["sumpass"]);
     var fail = Object.keys(data).map(d => data[d]["sumfail"]);
     var xValues = Object.keys(data);   
@@ -134,8 +168,7 @@
         }
     }
         
-    });
-    
+    });   
 </script>
     
 <script>
