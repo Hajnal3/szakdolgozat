@@ -1,31 +1,23 @@
-url: "C:/xampp/htdocs/Fancy/db2.php"
 
-// Send AJAX request to PHP file to get data
-var xhttp = new XMLHttpRequest();
-xhttp.onreadystatechange = function() {
-        // Process data and create chart
-    var ctx = document.getElementById("test").getContext("2d");
-    var data = processAll
-    var pass = Object.keys(data).map(d => data[d]["sumpass"]);
-    var fail = Object.keys(data).map(d => data[d]["sumfail"]);
-    var xValues = Object.keys(data);   
-    var testChart = new Chart("test", 
-    {
-    type: "bar",
-    data: 
-        {
-        labels:xValues,
-        datasets: 
-                [{
-                label:'pass',
-                data:pass,
-                backgroundColor: "rgb(0, 230, 115)",
-                },
-                {
+$(document).ready(function () {
+  var ctx = document.getElementById("test").getContext("2d");
+  var pass = Object.keys(data).map(d => data[d]["sumpass"]);
+  var fail = Object.keys(data).map(d => data[d]["sumfail"]);
+  var xValues = Object.keys(data);   
+  var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: xValues,
+       datasets: 
+        [{
+            label:'pass',
+            data:pass,
+            backgroundColor: "rgb(0, 230, 115)",
+            },{
                 label:"fail",
                 backgroundColor: "rgb(255, 51, 51)",
-                data: fail
-                }]
+                data: fail,
+            }]
         },
     options: {
         plugins: [ChartDataLabels],
@@ -60,8 +52,7 @@ xhttp.onreadystatechange = function() {
                    zeroLineColor: "rgb(221, 153, 255)"
                  },
                  Color:"rgb(221, 153, 255)",
-                display: true,
-                    
+                display: true,   
             }]
         },
         legend: {
@@ -72,10 +63,29 @@ xhttp.onreadystatechange = function() {
                 top: 50
             }
         }
-    }
-        
+    } 
     }); 
-};    
-    xhttp.open("GET", url, true);
-    xhttp.send();
+    
+    
+
+  /* Function to fetch data from PHP file
+  function fetchData() {
+    $.get("Library.php", getAllYield($conn,$processNames, $myday,$selectOption,$shift) {
+      // Update the chart data
+      myChart.data.labels = processAll.name;
+      myChart.data.datasets[0].data = processAll.pass;
+	  myChart.data.datasets[1].data = processAll.fail;
+      myChart.update();
+    });
+  }
+
+  // Initial data fetch
+  fetchData();
+
+  // Set interval for timed data fetch (every 5 seconds in this example)
+  setInterval(function() {
+    fetchData();
+  }, 5000);
+    */
+});
 
