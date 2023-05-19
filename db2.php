@@ -3,7 +3,7 @@
 
 function checkTimer() {
   $startTime = time();
-  $interval = 200; // 20 seconds interval
+  $interval = 20; // 20 seconds interval
   $currentTime = time();
   $diff = $currentTime - $startTime;
   if ($diff >= $interval) {
@@ -14,6 +14,7 @@ function checkTimer() {
     return false;
   }
 }
+ 
 
 try 
 {
@@ -24,27 +25,19 @@ catch(PDOException $ex){
 print($ex->getMessage());
 } 
 //print_r($conn);
-       
     
-// Function to execute an SQL query and return the result
-/*function executeQuery($query) {
-  global $conn;
-  $stmt = $conn->prepare($query);
-  $stmt->execute();
-  return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-*/
-    
-
-    $mydate=date('Y-m-d H:i:s');
-    $myday=date("2023-04-20"); //tesztelés miatta fix változó                     //$myday=date('Y-m-d');
+    //$mydate=date('Y-m-d H:i:s');
+    $myday=date("2023-04-20");                    //$myday=date('Y-m-d');
     $hour = date('H');
     switch( true ){
-        case ( $hour >= 6 && $hour < 14 ):$shift=6; break;
+        case ( $hour >= 6 && $hour < 14 ):$shift=06; break;
         case ( $hour >=14 && $hour < 22 ):$shift=14; break;
         default: $shift=22; break;        
     }
-
+    $shift=14;
+    $mydate=("2023-04-20 ".$shift.":00:00" ); //tesztelés miatta fix változó 
+   // $mydate=date("2023-04-15");
+    
     //választott cella cellid-a 
     if(isset($_POST['machine'])){
         $selectOption = $_POST['machine'];
@@ -53,10 +46,8 @@ print($ex->getMessage());
         $selectOption=101;
     }
     
-  
-    
 
-    $handleProdPlan = $conn->query("SELECT quantity FROM prodplan 
+    /*$handleProdPlan = $conn->query("SELECT quantity FROM prodplan 
     WHERE station_id = ".$selectOption."  
     AND shift_id = ".$shift."
     AND deadline = ".$myday."");
@@ -75,7 +66,7 @@ print($ex->getMessage());
     //$data=array_merge($dataFkt,$dataRun,$dataFla,$dataAss);
   
 
-    
+    */
     
 
     

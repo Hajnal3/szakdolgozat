@@ -1,6 +1,5 @@
 <?php
 
-
 //kiszedi a terminálokat a formhoz
 function getMachineList($conn)
 {
@@ -28,7 +27,6 @@ function getAttendance($conn,$selectOption,$shift)
 
     $result = $present->fetchAll(PDO::FETCH_NUM);
     $letszam = $result[0][0];
-    
     return $letszam;
 }
 
@@ -42,73 +40,30 @@ function getProdData($conn,$selectOption,$shift)
 
     $processNames = array();
     foreach($prod_data as $row)
-{
-    $prname=$row['process_name'];
-    $processids=explode(',', $row['process_ids']);
-    $processids=array_map('intval', $processids);
-    $processNames[$prname]=$processids;
-}
+    {
+        $prname=$row['process_name'];
+        $processids=explode(',', $row['process_ids']);
+        $processids=array_map('intval', $processids);
+        $processNames[$prname]=$processids;
+    }
+    
     return $processNames;
 }
 
 //kiszedi a teljes yieldet adott eljárásonként mikor az index kéri
-function getAllYield($conn, $myday,$selectOption,$shift)
+function getAllYield($conn,$mydate,$selectOption,$shift)
 {
-      $mySqlDay=("SELECT X.process_id, SUM(X.passed) As passed, SUM(X.failed) as failed
-                FROM (SELECT CONVERT(DATE_ADD('" . $myday . "', INTERVAL 0 day),date) as process_date, MAIN.snr, MAIN.process_id, MAIN.station_id, SUM(MAIN.passed) as passed, SUM(MAIN.failed) as failed
-                    FROM (
-                        SELECT f.snr, f.process_id, f.station_id, SUM(-1*f.passed) As passed, SUM(-1*f.failed) As failed 
-                        FROM process AS f 
-                        WHERE (EXTRACT(HOUR from f.process_date) = ".$shift."-1) 
-                        and CONVERT(f.process_date,date) = CONVERT(DATE_ADD('" . $myday . "', INTERVAL 0 day),date)
-                        and f.snr != 0 GROUP BY f.process_id, f.snr, f.station_id    
-                        UNION   
-                        SELECT f.snr, f.process_id, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
-                        FROM process AS f 
-                        WHERE (EXTRACT(HOUR from f.process_date) = EXTRACT(HOUR from '" . $myday . "')) and CONVERT(f.process_date,date) = CONVERT(DATE_ADD('" . $myday . "', INTERVAL 0 day),date) and f.snr != 0 
-                        GROUP BY f.process_id, f.snr, f.station_id
-                    ) AS MAIN 
-                    INNER JOIN stations AS C ON C.station_id = MAIN.station_id 
-                    WHERE C.station_id = ".$selectOption."
-                    GROUP BY MAIN.snr, MAIN.process_id, MAIN.station_id    
-                ) AS X
-                GROUP BY X.process_id");
+    //$mydate=date("2023-04-20 14:00:00");
+      $mySqlY="select process_id, sum(passed), sum(failed) 
+      from process 
+      where process_date BETWEEN '".$mydate."' and  DATE_add('".$mydate."', INTERVAL 8 HOUR)
+      and station_id=".$selectOption."
+      group by process_id";
+    $yield=$conn->query($mySqlY);
+    //var_dump($mySqlY);
+    $result = $yield->fetchAll(PDO::FETCH_NUM);
+    //print_r($result);
     
-    $mySqlNight=("SELECT X.process_id, SUM(X.passed) As passed, SUM(X.failed) as failed 
-				FROM (    
-                SELECT CONVERT(DATE_ADD('" . $myday . "', INTERVAL 1 day),date) as process_date, MAIN.snr, MAIN.process_id, MAIN.station_id, SUM(MAIN.passed) as passed, SUM(MAIN.failed) as failed 
-                FROM (
-                    SELECT f.snr, f.process_id, f.station_id, SUM(-1*f.passed) As passed, SUM(-1*f.failed) As failed 
-                    FROM process AS f 
-                    WHERE (EXTRACT(HOUR from f.process_date) = 21) and CONVERT(f.process_date,date) = CONVERT(DATE_ADD('".$myday."', INTERVAL 1 day),date) and f.snr != 0 
-                    GROUP BY f.process_id, f.snr, f.station_id 
-                UNION   
-                    SELECT f.snr, f.process_id, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
-                    FROM process AS f 
-                    WHERE (EXTRACT(HOUR from f.process_date) and CONVERT(f.process_date,date) = CONVERT(DATE_ADD('".$myday."', INTERVAL 1 day),date)) and f.snr != 0 
-                    GROUP BY f.process_id, f.snr, f.station_id 
-                UNION
-                    SELECT f.snr, f.process_id, f.station_id, SUM(f.passed) As passed, SUM(f.failed) As failed 
-					FROM process AS f 
-					WHERE (EXTRACT(HOUR from f.process_date) = EXTRACT(HOUR from '".$myday."')) and CONVERT(f.process_date,date) = CONVERT(DATE_ADD('".$myday."', INTERVAL 0 day),date) and f.snr != 0 
-					GROUP BY f.process_id, f.snr, f.station_id
-                    ) AS MAIN 
-                    INNER JOIN stations AS C ON C.station_id = MAIN.station_id 
-                    WHERE C.station_id = ".$selectOption."
-                    GROUP BY MAIN.snr, MAIN.process_id, MAIN.station_id
-					) AS X
-                GROUP BY X.process_id");
-
-        if ( date('H') > 6){
-        $handleY = $conn->query($mySqlDay);
-        } 
-        else {
-        $handleY = $conn->query($mySqlNight);
-        }
-    
-    $result = $handleY->fetchAll(PDO::FETCH_NUM);
-    print_r($result);
-    var_dump($handleY);
     $processDb=array();
     foreach($result as $row)
     {
@@ -117,22 +72,64 @@ function getAllYield($conn, $myday,$selectOption,$shift)
         $fail=$row[2];
         $processDb[$processid]=array("pass" => $pass,"fail" => $fail);
     }
-    
+   // echo var_dump($processDb), '<br>';
     
     $processNames=getProdData($conn,$selectOption,$shift);
+       /* $processAll=array();
         foreach($processNames as $name => $processIds) {
         $sumpass=0;
         $sumfail=0;
+    
+          //  print_r($processAll);
         foreach($processIds as $processid){
+           //echo var_dump($processDb), '<br>';
             if(array_key_exists($processid, $processDb)) {
+              // echo var_dump($processid), 'ezbelül', '<br>';
                 $sumpass=$processDb[$processid]["pass"]+$sumpass;
                 $sumfail=$processDb[$processid]["fail"]+$sumfail;
+               //$processAll[$name] = array(["sumpass" => $sumpass, "sumfail" => $sumfail]);
+              
+           
+            //echo var_dump($processAll), '<br>';
+              // echo var_dump($name), '<br>';
+                echo var_dump($sumpass), '<br>';
+                echo var_dump($sumfail), '<br>';
+                echo var_dump( $processAll[$name]), '<br>';
+                $processAll[$name] =array("sumpass" => $sumpass, "sumfail" => $sumfail);
+               
+                echo var_dump(  $processAll[$name]), '<br>';
+                $processedYield[] = $processAll;
+                
             }
+              
+          
+                
         }
-        $processAll=array();
-        $processAll[$name] = ["sumpass" => $sumpass, "sumfail" => $sumfail];
+          
     }
-    return $processAll;
+   // echo var_dump( $processedYield), '<br>';*/
+    
+    foreach ($processNames as $name => $processIds) {
+    $sumpass = 0;
+    $sumfail = 0;
+    $processAll = array();
+
+    foreach ($processIds as $processid) {
+        if (array_key_exists($processid, $processDb)) {
+            $sumpass += $processDb[$processid]["pass"];
+            $sumfail += $processDb[$processid]["fail"];
+        }
+    }
+
+    $processAll = array("sumpass" => $sumpass, "sumfail" => $sumfail);
+    $processedYield[$name] = $processAll;
+         
+}
+ echo var_dump($processedYield), '<br>';
+return $processedYield;
+     //echo ($sumpass), '<br>';
+  
+    
     
 }
 

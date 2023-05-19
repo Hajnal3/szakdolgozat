@@ -1,9 +1,8 @@
 $(document).ready(function () {
     var ctx = document.getElementById("prod").getContext("2d");
-    var data=<?=json_encode($processAll)?>;
-    var prodplan = data["HU"]["sumpass"];
+    //var prodplan = data["HU"]["sumpass"];
     var xValues = [123,432]; //<?php echo json_encode($ProdPlan[1])?>;
-    var prodChart = new Chart("prod", 
+    var myChart = new Chart("prod", 
     {
     type: "horizontalBar",
     data: 

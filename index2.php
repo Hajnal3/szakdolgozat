@@ -42,8 +42,7 @@
 		<canvas title='test' id='test' ></canvas> 
 	</div> 
     
-    
-    
+       
 <?php  
     session_start();
 if (!isset($_SESSION['flip'])) {
@@ -60,7 +59,6 @@ if ($_SESSION['flip']) {
 		<canvas title='test' id='test' ></canvas> 
 	</div> 
 </div>";
-    
     $_SESSION['flip'] = false;
 } else {
     echo "
@@ -75,6 +73,9 @@ if ($_SESSION['flip']) {
 	   <img src='due.png' class='grid-image'>
     </div> 
 </div>";
+    $_SESSION['flip'] = true;
+}
+    if (checkTimer()) {
     $_SESSION['flip'] = true;
 }
         

@@ -1,8 +1,14 @@
 <?php
     include('db2.php');
     include ("Library.php");
-    $AllYield=getAllYield($conn, $myday,$selectOption,$shift);
-    //var_dump($AllYield);
+
+    $AllYield=getAllYield($conn,$mydate,$selectOption,$shift);
+    $timer=checkTimer();
+
+    session_start();
+    if (!isset($_SESSION['flip'])) {
+        $_SESSION['flip'] = false;
+    }
     
 ?>
 <!DOCTYPE html>
@@ -15,9 +21,8 @@
     <script src="chartjs-plugin-datalabels.js"></script>
     <script>var data = <?php echo json_encode($AllYield);?>; </script>
     <script src="TestChart.js"></script>
+    <script src="ProdChart.js"></script>
     <!--<script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.0/dist/chart.min.js"></script>-->
-    
-    
     
 <title>Dashboard</title>  
     
@@ -42,20 +47,10 @@
     
 <h2>Aktuális létszám: <?php $letszam=getAttendance($conn,$selectOption,$shift);
     echo $letszam ?></h2>
-    
-    <div class='grid-item item2'>
-		<canvas title='test' id='test' ></canvas> 
-	</div> 
-    
-    
-    
-<?php  
-    session_start();
-if (!isset($_SESSION['flip'])) {
-    $_SESSION['flip'] = false;
-}
 
     
+<?php  
+
     
 if ($_SESSION['flip']) {
     echo "
@@ -67,7 +62,6 @@ if ($_SESSION['flip']) {
 		<canvas title='test' id='test' ></canvas> 
 	</div> 
 </div>";
-    
     $_SESSION['flip'] = false;
 } else {
     echo "
@@ -76,7 +70,7 @@ if ($_SESSION['flip']) {
         <h3>Mai Tervezett és Gyártott darabszám:</h3>
 	</div> 
     <div class='grid-item item4'>
-		<canvas title='prod' id='prod'></canvas> 
+		<canvas title='prod' id='prod' ></canvas>  
 	</div>
     <div class='grid-item item5'>
 	   <img src='due.png' class='grid-image'>
@@ -87,7 +81,6 @@ if ($_SESSION['flip']) {
         
 ?>
 
-
 <!--script>
   setTimeout(function() {
     window.location.reload();
@@ -95,7 +88,6 @@ if ($_SESSION['flip']) {
     
 </script-->
  
-
 
     
     
