@@ -66,26 +66,5 @@ $(document).ready(function () {
     } 
     }); 
     
-    
-
-  /* Function to fetch data from PHP file
-  function fetchData() {
-    $.get("Library.php", getAllYield($conn,$processNames, $myday,$selectOption,$shift) {
-      // Update the chart data
-      myChart.data.labels = processAll.name;
-      myChart.data.datasets[0].data = processAll.pass;
-	  myChart.data.datasets[1].data = processAll.fail;
-      myChart.update();
-    });
-  }
-
-  // Initial data fetch
-  fetchData();
-
-  // Set interval for timed data fetch (every 5 seconds in this example)
-  setInterval(function() {
-    fetchData();
-  }, 5000);
-    */
 });
 

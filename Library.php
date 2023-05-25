@@ -72,42 +72,8 @@ function getAllYield($conn,$mydate,$selectOption,$shift)
         $fail=$row[2];
         $processDb[$processid]=array("pass" => $pass,"fail" => $fail);
     }
-   // echo var_dump($processDb), '<br>';
     
     $processNames=getProdData($conn,$selectOption,$shift);
-       /* $processAll=array();
-        foreach($processNames as $name => $processIds) {
-        $sumpass=0;
-        $sumfail=0;
-    
-          //  print_r($processAll);
-        foreach($processIds as $processid){
-           //echo var_dump($processDb), '<br>';
-            if(array_key_exists($processid, $processDb)) {
-              // echo var_dump($processid), 'ezbelül', '<br>';
-                $sumpass=$processDb[$processid]["pass"]+$sumpass;
-                $sumfail=$processDb[$processid]["fail"]+$sumfail;
-               //$processAll[$name] = array(["sumpass" => $sumpass, "sumfail" => $sumfail]);
-              
-           
-            //echo var_dump($processAll), '<br>';
-              // echo var_dump($name), '<br>';
-                echo var_dump($sumpass), '<br>';
-                echo var_dump($sumfail), '<br>';
-                echo var_dump( $processAll[$name]), '<br>';
-                $processAll[$name] =array("sumpass" => $sumpass, "sumfail" => $sumfail);
-               
-                echo var_dump(  $processAll[$name]), '<br>';
-                $processedYield[] = $processAll;
-                
-            }
-              
-          
-                
-        }
-          
-    }
-   // echo var_dump( $processedYield), '<br>';*/
     
     foreach ($processNames as $name => $processIds) {
     $sumpass = 0;
@@ -120,19 +86,13 @@ function getAllYield($conn,$mydate,$selectOption,$shift)
             $sumfail += $processDb[$processid]["fail"];
         }
     }
-
     $processAll = array("sumpass" => $sumpass, "sumfail" => $sumfail);
     $processedYield[$name] = $processAll;
          
 }
- echo var_dump($processedYield), '<br>';
-return $processedYield;
-     //echo ($sumpass), '<br>';
-  
-    
+return $processedYield; 
     
 }
-
 
 
 

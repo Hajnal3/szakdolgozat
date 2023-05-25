@@ -21,7 +21,7 @@ $(document).ready(function () {
     options: {
         plugins: [ChartDataLabels],
         legend: {
-            display: true,
+            display: false,
             labels: {
                 fontColor: 'white', 
             }

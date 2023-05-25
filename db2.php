@@ -1,6 +1,5 @@
 <?php
 
-
 function checkTimer() {
   $startTime = time();
   $interval = 20; // 20 seconds interval
@@ -24,7 +23,6 @@ $conn = new PDO('mysql:host=localhost;dbname=szakdolgozat', "test", " yourpasswo
 catch(PDOException $ex){
 print($ex->getMessage());
 } 
-//print_r($conn);
     
     //$mydate=date('Y-m-d H:i:s');
     $myday=date("2023-04-20");                    //$myday=date('Y-m-d');
@@ -36,8 +34,7 @@ print($ex->getMessage());
     }
     $shift=14;
     $mydate=("2023-04-20 ".$shift.":00:00" ); //tesztelés miatta fix változó 
-   // $mydate=date("2023-04-15");
-    
+   
     //választott cella cellid-a 
     if(isset($_POST['machine'])){
         $selectOption = $_POST['machine'];
