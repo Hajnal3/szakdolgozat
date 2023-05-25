@@ -94,8 +94,29 @@ return $processedYield;
     
 }
 
+function getProdPlan(){
+   
+    $handleProdPlan = "SELECT quantity FROM prodplan 
+    WHERE station_id = ".$selectOption."  
+    AND shift_id = ".$shift."
+    AND deadline = ".$myday."";
+    $Plan=$conn->query($handleProdPlan);
+    $result = $Plan->fetchAll(PDO::FETCH_NUM);
 
+        $prod_sum=0;
+        $plan_sum=0;
+        foreach($result as $row)
+        {
+            $prod_sum=$row[0]+$prod_sum;
+            $plan_sum=$row[1]+$plan_sum;
+        }
+        $ProdPlan=array();
+        array_push($ProdPlan, $prod_sum,$plan_sum);  
+    
+return $ProdPlan
+}
 
+    
 
 
 ?>
